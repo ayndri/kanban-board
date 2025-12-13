@@ -13,6 +13,8 @@
     <link href="{{ asset('tamplate/assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('tamplate/assets/js/layout.js') }}"></script>
     <link href="{{ asset('tamplate/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ asset('tamplate/assets/libs/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('tamplate/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <link href="{{ asset('tamplate/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('tamplate/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('tamplate/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
@@ -24,66 +26,128 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        #sidebar {
-            width: 225px;
-            /* Lebar default sidebar */
-            /* transition: width 0.3s; */
+        :root {
+            --vertical-menu-width: 250px;
+            --vertical-menu-width-sm: 70px;
+            --header-height: 70px;
+            --bg-sidebar: #2c3e50;
+            --bg-header: #ffffff;
+            --transition-speed: 0.3s;
+        }
+
+        .app-menu {
+            width: var(--vertical-menu-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1005;
+            background-color: var(--bg-sidebar);
+            transition: width var(--transition-speed) ease;
+            overflow-x: hidden;
         }
 
         #page-topbar {
-            left: 0px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--vertical-menu-width);
+            height: var(--header-height);
+            background-color: var(--bg-header);
+            z-index: 1004;
+            transition: left var(--transition-speed) ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
 
-        #page-topbar,
         .main-content {
-            margin-left: 225px;
-            /* Disesuaikan dengan lebar sidebar */
-            transition: margin-left 0.3s ease-in-out;
+            margin-left: var(--vertical-menu-width);
+            padding-top: calc(var(--header-height) + 20px);
+            transition: margin-left var(--transition-speed) ease;
+            min-height: 100vh;
         }
 
-        .dropdown .icon--arrow-bottom {
-            display: none !important;
+        .navbar-brand-box {
+            height: var(--header-height);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 1.5rem;
         }
 
-        /* Aturan saat sidebar diminimize */
-        .sidebar-minimized #sidebar {
-            width: 70px;
+        .logo-lg {
+            display: block;
         }
 
-        /* Geser header dan konten utama saat sidebar minimize */
-        .sidebar-minimized #page-topbar,
-        .sidebar-minimized .main-content {
-            margin-left: 70px;
-        }
-
-        /* Menyembunyikan elemen-elemen saat sidebar diminimize */
-        .sidebar-minimized #sidebar .menu-title,
-        .sidebar-minimized #sidebar .nav-link span,
-        .sidebar-minimized #sidebar .logo-lg {
+        .logo-sm {
             display: none;
         }
 
-        /* Menampilkan logo kecil saat sidebar diminimize */
-        .sidebar-minimized #sidebar .logo-sm {
-            display: block !important;
+        body[data-sidebar-size="sm"] .app-menu {
+            width: var(--vertical-menu-width-sm);
         }
 
-        /* Hilangkan arrow dropdown di navbar user */
-        #page-header-user-dropdown::after {
+        body[data-sidebar-size="sm"] #page-topbar {
+            left: var(--vertical-menu-width-sm);
+        }
+
+        body[data-sidebar-size="sm"] .main-content {
+            margin-left: var(--vertical-menu-width-sm);
+        }
+
+        body[data-sidebar-size="sm"] .navbar-brand-box {
+            justify-content: center;
+            padding-left: 0;
+        }
+
+        body[data-sidebar-size="sm"] .logo-lg {
             display: none !important;
         }
 
-        /* Buat breadcrumb di bawah navbar */
-        .page-title-box {
-            margin-top: 65px;
-            border-bottom: 1px solid #dee2e6;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+        body[data-sidebar-size="sm"] .logo-sm {
+            display: block !important;
+        }
+
+        body[data-sidebar-size="sm"] .logo-sm img {
+            height: 30px;
+            width: auto;
+        }
+
+        body[data-sidebar-size="sm"] .nav-link span,
+        body[data-sidebar-size="sm"] .menu-title,
+        body[data-sidebar-size="sm"] .menu-arrow {
+            display: none !important;
+        }
+
+        body[data-sidebar-size="sm"] .navbar-nav .nav-link {
+            display: flex;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        body[data-sidebar-size="sm"] .navbar-nav .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-menu {
+            z-index: 1050 !important;
+            position: absolute !important;
+        }
+
+        .topbar-user .dropdown-menu {
+            top: 100% !important;
+            right: 0 !important;
+            left: auto !important;
+            transform: none !important;
+            margin-top: 0 !important;
         }
     </style>
 </head>
 
 <body data-user-role="@json(Auth::user()->role->name ?? null)">
-    <div id=" layout-wrapper" class="">
+    <div id="layout-wrapper" class="">
         @include('template.navbar')
         @include('template.sidebar')
         <div class="breadcrumb-wrapper">
@@ -128,31 +192,37 @@
 <script src="{{ asset('tamplate/assets/libs/swiper/swiper-bundle.min.js') }}"></script>
 <script src="{{ asset('tamplate/assets/libs/simplebar/simplebar.min.js') }}"></script>
 <script src="{{ asset('tamplate/assets/libs/node-waves/waves.min.js') }}"></script>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script src="{{ asset('tamplate/assets/js/plugins.js')}}"></script>
 <script src="{{ asset('tamplate/assets/js/app.js')}}"></script>
-{{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script> --}}
-{{-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script> --}}
-{{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> --}}
 
 <script>
     // Inisialisasi DataTables
     $(document).ready(function() {
-        $('#myTable').DataTable();
+        if ($.fn.DataTable) {
+            $('#myTable').DataTable();
+        }
     });
 
+    // Fungsi Toggle Sidebar
+    window.toggleSidebar = function() {
+        const htmlElement = document.documentElement;
+        const bodyElement = document.body;
+        let currentSize = htmlElement.getAttribute('data-sidebar-size') || bodyElement.getAttribute('data-sidebar-size');
 
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const layoutWrapper = document.getElementById('layout-wrapper');
-
-    if (toggleBtn && layoutWrapper) {
-        toggleBtn.addEventListener('click', function() {
-            layoutWrapper.classList.toggle('sidebar-minimized');
-        });
-    }
+        if (currentSize === 'lg' || !currentSize) {
+            htmlElement.setAttribute('data-sidebar-size', 'sm');
+            bodyElement.setAttribute('data-sidebar-size', 'sm');
+        } else {
+            htmlElement.setAttribute('data-sidebar-size', 'lg');
+            bodyElement.setAttribute('data-sidebar-size', 'lg');
+        }
+    };
 </script>
 
 @stack('scripts')
+</body>
 
 </html>

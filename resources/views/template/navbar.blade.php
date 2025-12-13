@@ -2,8 +2,14 @@
     <div class="navbar-header p-0">
         <div class="d-flex justify-content-between align-items-center w-100 px-3">
             <div class="d-flex align-items-center">
-                <button class="btn btn-sm px-3 fs-16 header-item" id="sidebarToggle">
-                    <i class="fa-solid fa-bars"></i>
+                <button type="button"
+                    class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
+                    id="sidebarToggle"
+                    onclick="toggleSidebar()"> <span class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
                 </button>
 
                 <form class="app-search d-none d-md-block ms-2">
@@ -126,22 +132,30 @@
 
 {{-- SCRIPT ANDA UNTUK LOGOUT (Tidak diubah) --}}
 @push('scripts')
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize all dropdowns manually
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+    });
+</script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
         const logoutLink = document.getElementById('logout-link');
-
         if (logoutLink) {
             logoutLink.addEventListener('click', function(e) {
-                e.preventDefault(); // Mencegah link default
-
+                e.preventDefault();
                 Swal.fire({
                     title: 'Apakah Anda yakin?',
                     text: "Anda akan keluar dari sesi ini!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6', // Warna biru untuk konfirmasi
-                    cancelButtonColor: '#d33', // Warna merah untuk batal
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
                     confirmButtonText: 'Ya, Logout!',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
@@ -152,15 +166,8 @@
             });
         }
 
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function() {
-                // Ganti 'class-untuk-sidebar-minimize' dengan class yang benar
-                // Misalnya, 'sidebar-enable' atau 'vertical-collpsed'
-                document.body.classList.toggle('vertical-collpsed');
-            });
-        }
 
     });
 </script>
+@endpush
 @endpush

@@ -117,13 +117,10 @@
         const users = @json($usersJson) || [];
 
         // ==============================================
-        // ============ VARIABEL PERMISSION BARU ========
+        // ============ VARIABEL PERMISSION =============
         // ==============================================
-        // eslint-disable-next-line
-        // prettier-ignore
         const userRoleElement = document.getElementById('app');
         let userRole = userRoleElement.dataset.userRole;
-        // Cek apakah role user adalah 'manager' ATAU 'admin'
         const canManageTasks = ['manager', 'admin'].includes(userRole);
         // ==============================================
 
@@ -131,8 +128,7 @@
         const filterDropdown = document.getElementById('filter-by-assignee');
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]') ?
-            document.querySelector('meta[name="csrf-token"]').getAttribute('content') :
-            '';
+            document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
 
         const boardContainer = document.getElementById('kanban-board-container');
         const taskModalEl = document.getElementById('taskModal');
@@ -140,18 +136,20 @@
         const taskModal = new bootstrap.Modal(taskModalEl);
         const taskDetailsModal = new bootstrap.Modal(taskDetailsModalEl);
 
-        // ... (Fungsi helper: getPriorityClass, getStatusColor, formatDate, findTaskById) ...
+        // Helper functions
         const getPriorityClass = (priority) => ({
             'High': 'danger',
             'Medium': 'warning',
             'Low': 'success'
         } [priority] || 'secondary');
+
         const getStatusColor = (slug) => ({
             'to-do': 'info',
             'in-progress': 'warning',
             'in-review': 'primary',
             'completed': 'success'
         } [slug] || 'light');
+
         const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('id-ID', {
             day: 'numeric',
             month: 'short',
@@ -174,6 +172,9 @@
             };
         }
 
+        // =======================================================
+        // 1. UPDATE: FUNGSI RENDER BOARD (Tidak banyak berubah)
+        // =======================================================
         function renderBoard() {
             boardContainer.innerHTML = '';
 
@@ -203,13 +204,12 @@
                                 ${status.title}
                                 <span id="count-${status.id}" class="badge rounded-pill ms-2 bg-soft-${getStatusColor(status.slug)} text-${getStatusColor(status.slug)}">${filteredTasks.length}</span>
                             </h6>
-
                             ${canManageTasks ? `
                             <button class="btn btn-soft-primary btn-sm p-0 add-task-in-column-btn" style="width: 24px; height: 24px;" data-status-id="${status.id}">
                                 <i class="ri-add-fill"></i>
                             </button>
                             ` : ''}
-                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-2 flex-grow-1 overflow-auto tasks-list" data-status-id="${status.id}" style="min-height: 400px;">
                         ${taskCardsHtml}
@@ -222,15 +222,24 @@
             addEventListeners();
         }
 
-        // ... (Fungsi: createTaskCard, createEmptyState) ...
+        // =======================================================
+        // 2. UPDATE: CARD DENGAN TOMBOL DELETE KECIL
+        // =======================================================
         function createTaskCard(task) {
             const user = users.find(u => u.id === task.user_id);
             return `
             <div class="card kanban-card mb-2 shadow-sm border-start border-5 border-${getPriorityClass(task.priority)}" data-task-id="${task.id}">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="fs-15 mb-0 text-truncate">${task.title}</h6>
-                        <span class="badge bg-soft-${getPriorityClass(task.priority)} text-${getPriorityClass(task.priority)}">${task.priority}</span>
+                        <h6 class="fs-15 mb-0 text-truncate" style="max-width: ${canManageTasks ? '80%' : '100%'}">${task.title}</h6>
+                        <div class="d-flex gap-1">
+                            <span class="badge bg-soft-${getPriorityClass(task.priority)} text-${getPriorityClass(task.priority)}">${task.priority}</span>
+                            ${canManageTasks ? `
+                            <button class="btn btn-sm btn-ghost-danger p-0 delete-task-btn-small" style="width:20px; height:20px; line-height:1;" data-task-id="${task.id}" title="Delete Task">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                            ` : ''}
+                        </div>
                     </div>
                     <p class="text-muted small mb-3 truncate-2-lines">${task.description || ''}</p>
                     <div class="d-flex align-items-center justify-content-between">
@@ -256,23 +265,17 @@
                 <img src="https://www.gstatic.com/images/icons/material/system/2x/inbox_gm_blue_48dp.png" alt="Empty" style="width: 60px; opacity: 0.5;">
                 <p class="mt-3 mb-0 fw-medium">No Tasks Here</p>
                 <small>Add a new task to get started.</small>
-            </div>
-        `;
+            </div>`;
         }
 
+        // ... (Fungsi initializeDragAndDrop SAMA SEPERTI SEBELUMNYA) ...
         function initializeDragAndDrop() {
             const lists = document.querySelectorAll('.tasks-list');
             lists.forEach(list => {
                 new Sortable(list, {
                     group: 'tasks',
                     animation: 150,
-
-                    // ==============================================
-                    // ============ PERMISSION CHECK DRAG/DROP ======
-                    // ==============================================
-                    disabled: !canManageTasks, // Nonaktifkan drag jika bukan manager/admin
-                    // ==============================================
-
+                    disabled: !canManageTasks,
                     onEnd: function(evt) {
                         const taskId = parseInt(evt.item.dataset.taskId);
                         const newStatus = evt.to.dataset.statusId;
@@ -288,7 +291,7 @@
                         });
 
                         updateTaskDataLocally(taskId, newStatus, oldStatus, newIndex);
-                        renderBoard();
+                        renderBoard(); // Re-render untuk merapikan UI
 
                         fetch('{{ route("tasks.reorder") }}', {
                                 method: 'post',
@@ -306,9 +309,8 @@
                                 })
                             })
                             .then(response => response.json())
-                            .then(data => console.log('Server response:', data.message))
                             .catch(error => {
-                                console.error('Error updating task order:', error);
+                                console.error('Error:', error);
                                 Swal.fire('Error', 'Failed to move task.', 'error');
                             });
                     }
@@ -316,7 +318,7 @@
             });
         };
 
-        // ... (Fungsi: updateTaskDataLocally) ...
+        // ... (Fungsi updateTaskDataLocally SAMA SEPERTI SEBELUMNYA) ...
         function updateTaskDataLocally(taskId, newStatusSlug, oldStatusSlug, newIndex) {
             let taskToMove;
             let oldStatus = statuses.find(s => s.id === oldStatusSlug);
@@ -336,26 +338,40 @@
             }
         }
 
+        // =======================================================
+        // 3. UPDATE: EVENT LISTENER
+        // =======================================================
         function addEventListeners() {
-            // Klik card untuk detail (tetap aktif untuk semua role)
+            // Klik card untuk detail
             document.querySelectorAll('.kanban-card').forEach(card => {
                 card.addEventListener('click', (e) => {
+                    // JANGAN buka modal jika yang diklik adalah tombol delete kecil
+                    if (e.target.closest('.delete-task-btn-small')) return;
+
                     const taskId = parseInt(e.currentTarget.dataset.taskId);
                     showTaskDetails(taskId);
                 });
             });
 
-            // Klik tombol '+' di kolom (hanya akan ada jika canManageTasks true)
+            // Klik tombol '+' di kolom
             document.querySelectorAll('.add-task-in-column-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const statusId = e.currentTarget.dataset.statusId;
                     openTaskModal(null, statusId);
                 });
             });
+
+            // Klik tombol Delete kecil di Card (Event Delegation)
+            document.querySelectorAll('.delete-task-btn-small').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Mencegah klik tembus ke card
+                    const taskId = e.currentTarget.dataset.taskId;
+                    confirmDeleteTask(taskId);
+                });
+            });
         }
 
-        // ... (Fungsi: openTaskModal - tidak berubah,
-        // karena tombol pemicunya sudah disembunyikan) ...
+        // ... (Fungsi openTaskModal SAMA SEPERTI SEBELUMNYA) ...
         function openTaskModal(taskId = null, statusId = null) {
             const form = document.getElementById('task-form');
             form.reset();
@@ -389,6 +405,9 @@
             taskModal.show();
         }
 
+        // =======================================================
+        // 4. UPDATE: MODAL DETAIL DENGAN TOMBOL DELETE BESAR
+        // =======================================================
         function showTaskDetails(taskId) {
             const {
                 task,
@@ -415,38 +434,99 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-
+                <div class="modal-footer justify-content-between">
                     ${canManageTasks ? `
-                    <button type="button" id="edit-task-btn" class="btn btn-primary">Edit Task</button>
-                    ` : ''}
+                    <button type="button" id="delete-task-btn-modal" class="btn btn-outline-danger">
+                        <i class="ri-delete-bin-line me-1"></i> Delete
+                    </button>
+                    ` : '<div></div>'}
+
+                    <div>
+                        <button type="button" class="btn btn-light me-1" data-bs-dismiss="modal">Close</button>
+                        ${canManageTasks ? `
+                        <button type="button" id="edit-task-btn" class="btn btn-primary">Edit Task</button>
+                        ` : ''}
                     </div>
+                </div>
                 `;
 
                 taskDetailsModal.show();
 
-                // Hanya tambahkan listener jika tombolnya ada
                 if (canManageTasks) {
+                    // Tombol Edit
                     document.getElementById('edit-task-btn').addEventListener('click', () => {
                         taskDetailsModal.hide();
                         openTaskModal(task.id);
                     });
+                    // Tombol Delete
+                    document.getElementById('delete-task-btn-modal').addEventListener('click', () => {
+                        taskDetailsModal.hide(); // Tutup modal detail dulu
+                        confirmDeleteTask(task.id);
+                    });
                 }
-
-            } else {
-                console.error(`Task with ID ${taskId} not found.`);
             }
         }
 
-        // Tombol "Add New Task" utama (hanya akan ada jika canManageTasks true)
+        // =======================================================
+        // 5. BARU: FUNGSI DELETE TASK
+        // =======================================================
+        function confirmDeleteTask(taskId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteTask(taskId);
+                }
+            });
+        }
+
+        function deleteTask(taskId) {
+            fetch(`{{ url('tasks') }}/${taskId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hapus task dari array lokal 'statuses'
+                    for (const status of statuses) {
+                        const index = status.tasks.findIndex(t => t.id == taskId);
+                        if (index > -1) {
+                            status.tasks.splice(index, 1);
+                            break;
+                        }
+                    }
+
+                    renderBoard(); // Update tampilan tanpa reload
+
+                    Swal.fire(
+                        'Deleted!',
+                        'Your task has been deleted.',
+                        'success'
+                    );
+                })
+                .catch(error => {
+                    console.error('Error deleting task:', error);
+                    Swal.fire('Error', 'Failed to delete task.', 'error');
+                });
+        }
+
+        // Tombol "Add New Task" utama
         const mainAddTaskBtn = document.getElementById('add-new-task-btn');
         if (mainAddTaskBtn) {
             mainAddTaskBtn.addEventListener('click', () => openTaskModal());
         }
 
-        // ... (Fungsi: Form Submit - tidak berubah,
-        // karena tombol pemicunya sudah disembunyikan) ...
+        // ... (Fungsi submit form SAMA SEPERTI SEBELUMNYA) ...
         document.getElementById('task-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const taskId = document.getElementById('task-id').value;
@@ -512,7 +592,6 @@
                 });
         });
 
-        // --- Logika Filter ---
         function populateFilterDropdown() {
             filterDropdown.innerHTML = `<option value="all">All Assignees</option>`;
             users.forEach(user => {
@@ -525,7 +604,6 @@
             renderBoard();
         });
 
-        // --- Inisialisasi Halaman ---
         populateFilterDropdown();
         renderBoard();
     });
