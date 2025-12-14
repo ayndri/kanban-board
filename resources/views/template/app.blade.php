@@ -13,8 +13,6 @@
     <link href="{{ asset('tamplate/assets/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('tamplate/assets/js/layout.js') }}"></script>
     <link href="{{ asset('tamplate/assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
-    <script src="{{ asset('tamplate/assets/libs/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('tamplate/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <link href="{{ asset('tamplate/assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('tamplate/assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('tamplate/assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />

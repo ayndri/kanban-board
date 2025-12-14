@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="dropdown ms-sm-3 header-item topbar-user">
-                    <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn dropdown-toggle" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
                             @if (Auth::user() && Auth::user()->photo)
                             <img class="rounded-circle header-profile-user" src="{{ asset('storage/' . Auth::user()->photo) }}" alt="Header Avatar">
@@ -133,15 +133,20 @@
 {{-- SCRIPT ANDA UNTUK LOGOUT (Tidak diubah) --}}
 @push('scripts')
 @push('scripts')
-<script>
+<!-- <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Initialize all dropdowns manually
         var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
         var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
             return new bootstrap.Dropdown(dropdownToggleEl);
         });
+
+        var userDropdown = document.getElementById('page-header-user-dropdown');
+        if (userDropdown) {
+            new bootstrap.Dropdown(userDropdown);
+        }
     });
-</script>
+</script> -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
